@@ -25,8 +25,40 @@ struct SelfGrowthApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+struct MainTabView: View {
+    @State private var selectedTab = 0
+    
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            ZStack {
+                if selectedTab == 0 {
+                    HomeView()
+                        .transition(.opacity)
+                }
+                else if selectedTab == 1 {
+                    TrackView()
+                        .transition(.opacity)
+                }
+                else {
+                    JournalView()
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut, value: selectedTab)
+            
+            CustomTabBarView(selectedTab: $selectedTab)
+        }
+    }
+}
+
+struct MainTabView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainTabView()
     }
 }
