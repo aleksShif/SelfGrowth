@@ -7,26 +7,19 @@
 
 
 import SwiftUI
+import SwiftData
 
 struct TrackView: View {
     @State private var selectedTab = 1 // Track tab selected
     @State private var selectedCategory = 0 // "All" category selected by default
+    @State private var isAddingActivity = false
     
-    // Sample activity data
-    let activities = [
-        Activity(name: "Study Session", duration: 45, icon: "book", color: Color(#colorLiteral(red: 0.9686274529, green: 0.78039217, blue: 0.3450980484, alpha: 1)), category: 1),
-        Activity(name: "Workout", duration: 45, icon: "dumbbell", color: Color(#colorLiteral(red: 0.4666666687, green: 0.7647058964, blue: 0.7647058964, alpha: 1)), category: 2),
-        Activity(name: "Meditation", duration: 15, icon: "moon.zzz", color: Color(#colorLiteral(red: 0.5568627715, green: 0.3529411852, blue: 0.9686274529, alpha: 1)), category: 3)
-    ]
+    @Query private var activities: [Activity]
     
+    @Environment(\.modelContext) private var modelContext
+
     // Category data
-    let categories = [
-        Category(name: "All", icon: "plus", color: Color(#colorLiteral(red: 0.3820864856, green: 0.6893107295, blue: 0.9856509566, alpha: 1))),
-        Category(name: "School", icon: "heart", color: Color(#colorLiteral(red: 0.3820864856, green: 0.6893107295, blue: 0.9856509566, alpha: 1))),
-        Category(name: "Fitness", icon: "figure.walk", color: Color(#colorLiteral(red: 0.3820864856, green: 0.6893107295, blue: 0.9856509566, alpha: 1))),
-        Category(name: "Mindfulness", icon: "moon.zzz", color: Color(#colorLiteral(red: 0.3820864856, green: 0.6893107295, blue: 0.9856509566, alpha: 1))),
-        Category(name: "Hobbies", icon: "gamecontroller", color: Color(#colorLiteral(red: 0.3820864856, green: 0.6893107295, blue: 0.9856509566, alpha: 1)))
-    ]
+    let categories = CategoryData.categories
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -82,13 +75,32 @@ struct TrackView: View {
                             ForEach(filteredActivities) { activity in
                                 ActivityCardView(activity: activity)
                             }
+                            
+                            Button(action: {isAddingActivity=true})
+                            {
+                                HStack{
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.system(size: 20))
+                                    Text("Add New Activity")
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color(#colorLiteral(red: 0.5081194639, green: 0.4898516536, blue: 0.7515105605, alpha: 1)))
+                                .cornerRadius(15)
+                            }
+                            .padding(.bottom, 80)
                         }
                         .padding()
                     }
                 }
                 // Custom tab bar
-//                CustomTabBarView(selectedTab: $selectedTab)
+                CustomTabBarView(selectedTab: $selectedTab)
             }
+        }
+        .sheet(isPresented: $isAddingActivity) {
+            AddActivityView(categories: categories)
         }
     }
     
@@ -120,7 +132,7 @@ struct CategoryButtonView: View {
             
             Text(category.name)
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(isSelected ? Color(#colorLiteral(red: 0.1921568662, green: 0.007843137719, blue: 0.09019608051, alpha: 1)) : .gray)
         }
     }
 }
@@ -367,23 +379,6 @@ struct BranchShape: Shape {
             }
         }
     }
-}
-
-// Activity model
-struct Activity: Identifiable {
-    let id = UUID()
-    let name: String
-    let duration: Int
-    let icon: String
-    let color: Color
-    let category: Int
-}
-
-// Category model
-struct Category {
-    let name: String
-    let icon: String
-    let color: Color
 }
 
 struct TrackView_Previews: PreviewProvider {

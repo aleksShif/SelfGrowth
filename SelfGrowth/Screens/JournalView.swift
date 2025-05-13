@@ -7,11 +7,16 @@
 
 
 import SwiftUI
+import SwiftData
 
 struct JournalView: View {
     @State private var selectedTab = 2 // Journal tab selected
     @State private var selectedDate = 0 // First date selected
     @State private var selectedCategory = 0
+    
+    @Query private var activities: [Activity]
+    
+    @Environment(\.modelContext) private var modelContext
     
     // Sample dates
     let dates = [
@@ -22,17 +27,23 @@ struct JournalView: View {
         (day: "FRI", number: "14")
     ]
     
-    // Sample categories
-    let categories = [
-        (category: Category(name: "School", icon: "book", color: Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5))), tasks: 4),
-        (category: Category(name: "Mindfulness", icon: "moon.zzz", color: Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5))), tasks: 3)
-    ]
-    
-    let activities = [
-        Activity(name: "Mathematics", duration: 45, icon: "book", color: Color(#colorLiteral(red: 0.9686274529, green: 0.78039217, blue: 0.3450980484, alpha: 1)), category: 0),
-        Activity(name: "Workout", duration: 45, icon: "dumbbell", color: Color(#colorLiteral(red: 0.4666666687, green: 0.7647058964, blue: 0.7647058964, alpha: 1)), category: 1),
-        Activity(name: "Meditation", duration: 15, icon: "moon.zzz", color: Color(#colorLiteral(red: 0.5568627715, green: 0.3529411852, blue: 0.9686274529, alpha: 1)), category: 1)
-    ]
+    var journalCategories: [JournalCategory] {
+        return CategoryData.categories.enumerated()
+            .map { (index, category) in
+                var taskCount = 0
+                if index == 0 {
+                    taskCount = activities.count
+                } else {
+                    taskCount = activities.filter {$0.category == index}.count
+                }
+                return JournalCategory(category: category, tasks: taskCount)
+            }
+    }
+////
+//    let categories = [
+//           (category: Category(name: "School", icon: "book", color: Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5))), tasks: 4),
+//           (category: Category(name: "Mindfulness", icon: "moon.zzz", color: Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5))), tasks: 3)
+//       ]
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -95,26 +106,26 @@ struct JournalView: View {
                                 
                                 Spacer()
                                 
-                                Text("See all")
-                                    .foregroundColor(.gray)
                             }
                             .padding(.top, 10)
                             .padding(.horizontal)
                             
                             // Category cards
-                            HStack(spacing: 15) {
-                                ForEach(0..<categories.count, id: \.self) { index in
-                                    CategoryCard(
-                                        category: categories[index].category,
-                                        tasks: categories[index].tasks,
-                                        isSelected: selectedCategory == index
-                                    )
-                                    .onTapGesture {
-                                        selectedCategory = index
+                            ScrollView(.horizontal, showsIndicators: false){
+                                HStack(spacing: 15) {
+                                    ForEach(0..<journalCategories.count, id: \.self) { index in
+                                        CategoryCard(
+                                            category: journalCategories[index].category,
+                                            tasks: journalCategories[index].tasks,
+                                            isSelected: selectedCategory == index
+                                        )
+                                        .onTapGesture {
+                                            selectedCategory = index
+                                        }
                                     }
                                 }
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
                             
                             // Task card
                            
@@ -127,6 +138,7 @@ struct JournalView: View {
                         
                     }
                 }
+                    .padding(.bottom, 80)
                     
                     // Custom tab bar
 //                    CustomTabBarView(selectedTab: $selectedTab)
@@ -135,7 +147,11 @@ struct JournalView: View {
         }
     }
     var filteredActivities: [Activity] {
-        return activities.filter { $0.category == selectedCategory }
+        if selectedCategory == 0 {
+            return activities
+        } else {
+            return activities.filter { $0.category == selectedCategory }
+        }
     }
 }
 
