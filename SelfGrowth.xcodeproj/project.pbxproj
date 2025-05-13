@@ -39,10 +39,14 @@
 				Components/Background/SkyBackgroundView.swift,
 				Components/Background/SunView.swift,
 				Components/Background/TopCloudView.swift,
+				Components/Classes/Activity.swift,
+				Components/Constant/CategoryData.swift,
+				Components/Constant/JournalCategory.swift,
 				Components/Navigation/CustomTabBarView.swift,
 				Components/Plant/PlantView.swift,
 				Item.swift,
 				"Preview Content/Preview Assets.xcassets",
+				Screens/AddActivityView.swift,
 				Screens/HomeView.swift,
 				Screens/JournalView.swift,
 				Screens/TrackView.swift,
@@ -63,21 +67,25 @@
 				Components/Plant/PlantView.swift,
 				Item.swift,
 				"Preview Content/Preview Assets.xcassets",
+				Screens/AddActivityView.swift,
 				Screens/HomeView.swift,
 				Screens/JournalView.swift,
 				Screens/TrackView.swift,
 				SelfGrowthApp.swift,
+				SelfGrowthTests/SelfGrowthTests.swift,
 			);
 			target = D9212C082D9DB357005AED87 /* SelfGrowthUITests */;
+		};
+		D9EDFD132DD3CD1E00CFE273 /* Exceptions for "SelfGrowth" folder in "SelfGrowthTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SelfGrowthTests/SelfGrowthTests.swift,
+			);
+			target = D9212BFE2D9DB357005AED87 /* SelfGrowthTests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D9212C022D9DB357005AED87 /* SelfGrowthTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SelfGrowthTests;
-			sourceTree = "<group>";
-		};
 		D9212C0C2D9DB357005AED87 /* SelfGrowthUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SelfGrowthUITests;
@@ -87,6 +95,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				D9212CA02DA8B51D005AED87 /* Exceptions for "SelfGrowth" folder in "SelfGrowth" target */,
+				D9EDFD132DD3CD1E00CFE273 /* Exceptions for "SelfGrowth" folder in "SelfGrowthTests" target */,
 				D9212CA12DA8B51D005AED87 /* Exceptions for "SelfGrowth" folder in "SelfGrowthUITests" target */,
 			);
 			path = SelfGrowth;
@@ -123,7 +132,6 @@
 			isa = PBXGroup;
 			children = (
 				D9212C932DA8B51D005AED87 /* SelfGrowth */,
-				D9212C022D9DB357005AED87 /* SelfGrowthTests */,
 				D9212C0C2D9DB357005AED87 /* SelfGrowthUITests */,
 				D9212BEE2D9DB356005AED87 /* Products */,
 			);
@@ -173,9 +181,6 @@
 			);
 			dependencies = (
 				D9212C012D9DB357005AED87 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				D9212C022D9DB357005AED87 /* SelfGrowthTests */,
 			);
 			name = SelfGrowthTests;
 			packageProductDependencies = (
