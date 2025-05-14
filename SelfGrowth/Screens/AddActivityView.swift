@@ -20,6 +20,7 @@ struct AddActivityView: View {
     @State private var duration = 30
     @State private var selectedCategory = 1
     @State private var selectedColor = Color(#colorLiteral(red: 0.9686274529, green: 0.78039217, blue: 0.3450980484, alpha: 1))
+    @State private var selectedColorIndex = 0
     @State private var selectedIcon = "book"
     
     // Available icons to choose from
@@ -32,6 +33,14 @@ struct AddActivityView: View {
         Color(#colorLiteral(red: 0.5568627715, green: 0.3529411852, blue: 0.9686274529, alpha: 1)),
         Color(#colorLiteral(red: 0.9098039269, green: 0.4784313738, blue: 0.6431372762, alpha: 1)),
         Color(#colorLiteral(red: 0.4500938654, green: 0.8412100673, blue: 0.6149917841, alpha: 1))
+    ]
+    
+    let colorsEnum: [ActivityColorOption] = [
+        .yellow,
+        .teal,
+        .purple,
+        .pink,
+        .green
     ]
     
     var body: some View {
@@ -126,6 +135,7 @@ struct AddActivityView: View {
                                         )
                                         .onTapGesture {
                                             selectedColor = colors[index]
+                                            selectedColorIndex = index
                                         }
                                 }
                             }
@@ -177,7 +187,7 @@ struct AddActivityView: View {
             name: name,
             duration: duration,
             icon: selectedIcon,
-            color: selectedColor,
+            colorOption: colorsEnum[selectedColorIndex],
             category: selectedCategory
         )
         

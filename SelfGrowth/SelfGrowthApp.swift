@@ -13,7 +13,8 @@ struct SelfGrowthApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self,
-            Activity.self
+            Activity.self,
+            ActivityLog.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -32,6 +33,9 @@ struct SelfGrowthApp: App {
                     Task {
                         await addDefaultActivitiesIfNeeded()
                     }
+//                    Task {
+//                        await clearSpecificItems()
+//                    }
                 }
         }
         .modelContainer(sharedModelContainer)
@@ -69,6 +73,22 @@ struct SelfGrowthApp: App {
             print("Error setting up default activities: \(error)")
         }
     }
+//    private func clearSpecificItems() {
+//        let context = sharedModelContainer.mainContext
+//        do {
+//            let predicate = #Predicate<ActivityLog> { item in
+//                // Your condition here, e.g.:
+//                item.name == "Test3"
+//            }
+//            
+//            let descriptor = FetchDescriptor<ActivityLog>(predicate: predicate)
+//            try context.delete(model: ActivityLog.self, where: descriptor.predicate)
+//            
+//            try context.save()
+//        } catch {
+//            print("Failed to clear specific items: \(error)")
+//        }
+//    }
 }
 
 struct MainTabView: View {

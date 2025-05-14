@@ -11,40 +11,58 @@ import SwiftData
 
 struct JournalView: View {
     @State private var selectedTab = 2 // Journal tab selected
-    @State private var selectedDate = 0 // First date selected
+    @State private var selectedDate: Int
     @State private var selectedCategory = 0
+    @State private var currentWeekStartDate = Date().startOfWeek()
     
-    @Query private var activities: [Activity]
+    @Query private var activitiesLog: [ActivityLog]
     
     @Environment(\.modelContext) private var modelContext
     
-    // Sample dates
-    let dates = [
-        (day: "MON", number: "10"),
-        (day: "TUE", number: "11"),
-        (day: "WED", number: "12"),
-        (day: "THU", number: "13"),
-        (day: "FRI", number: "14")
-    ]
+    // current day will automatically be selected
+    init() {
+        let calendar = Calendar.current
+        let today = Date()
+        let weekday = calendar.component(.weekday, from: today) // 1 = Sunday, 2 = Monday, etc.
+        
+        // Need to convert to 0-based index, since Mon is usually 2
+        let currentDayIndex = (weekday + 5) % 7
+        
+        // Ensure we don't go beyond our 5-day view (Mon-Fri)
+        let initialSelectedDate = min(currentDayIndex, 6)
+        
+        // Initialize the state
+        _selectedDate = State(initialValue: initialSelectedDate)
+    }
+    
+    var weekDates: [(day: String, number: String, date: Date)] {
+         return (0..<7).map { dayOffset in
+             let date = Calendar.current.date(byAdding: .day, value: dayOffset, to: currentWeekStartDate)!
+             let dayFormatter = DateFormatter()
+             dayFormatter.dateFormat = "EEE"
+             let day = dayFormatter.string(from: date).uppercased()
+             
+             let numberFormatter = DateFormatter()
+             numberFormatter.dateFormat = "dd"
+             let number = numberFormatter.string(from: date)
+             
+             return (day: day, number: number, date: date)
+         }
+     }
     
     var journalCategories: [JournalCategory] {
         return CategoryData.categories.enumerated()
             .map { (index, category) in
                 var taskCount = 0
                 if index == 0 {
-                    taskCount = activities.count
+                    taskCount = filteredActivitiesByDate.count
                 } else {
-                    taskCount = activities.filter {$0.category == index}.count
+                    taskCount = filteredActivitiesByDate.filter {$0.category == index}.count
                 }
                 return JournalCategory(category: category, tasks: taskCount)
             }
     }
-////
-//    let categories = [
-//           (category: Category(name: "School", icon: "book", color: Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5))), tasks: 4),
-//           (category: Category(name: "Mindfulness", icon: "moon.zzz", color: Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5))), tasks: 3)
-//       ]
-    
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // Background gradient
@@ -76,15 +94,54 @@ struct JournalView: View {
                         .padding(.top, 40)
                     }
                     
-                    Spacer()
+//                    Spacer()
+                    
+                    // Week Selector
+                    HStack {
+                        Button(action: {
+                            currentWeekStartDate = Calendar.current.date(byAdding: .day, value: -7, to: currentWeekStartDate)!
+                            selectedDate = 0
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(width: 40, height: 40)
+                                .background(Color(#colorLiteral(red: 0.7, green: 0.9, blue: 0.7, alpha: 1)))
+                                .cornerRadius(12)
+                        }
+                        
+                        Spacer()
+                        
+                        Text(weekRange)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            currentWeekStartDate = Calendar.current.date(byAdding: .day, value: 7, to: currentWeekStartDate)!
+                            selectedDate = 0
+                        }) {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(currentWeekStartDate.isCurrentWeek() ? .gray : .white)
+                                .frame(width: 40, height: 40)
+                                .background(currentWeekStartDate.isCurrentWeek() ? Color(#colorLiteral(red: 0.7, green: 0.9, blue: 0.7, alpha: 0.5)) :
+                                                Color(#colorLiteral(red: 0.7, green: 0.9, blue: 0.7, alpha: 1)))
+                                .cornerRadius(12)
+                        }
+                        .disabled(currentWeekStartDate.isCurrentWeek())
+                    }
+                    .padding(.top, 10)
+                    .padding(.horizontal, 30)
                     
                     // Date selector
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 15) {
-                            ForEach(0..<dates.count, id: \.self) { index in
+                            ForEach(0..<weekDates.count, id: \.self) { index in
                                 DateButton(
-                                    day: dates[index].day,
-                                    number: dates[index].number,
+                                    day: weekDates[index].day,
+                                    number: weekDates[index].number,
                                     isSelected: selectedDate == index
                                 )
                                 .onTapGesture {
@@ -93,7 +150,6 @@ struct JournalView: View {
                             }
                         }
                         .padding(.horizontal, 30)
-                        .padding(.vertical, 10)
                     }
                     
                     // Categories section
@@ -131,7 +187,7 @@ struct JournalView: View {
                            
                             VStack(spacing: 20) {
                                 ForEach(filteredActivities) { activity in
-                                    ActivityCardView(activity: activity)
+                                    LoggedActivityCardView(activity: activity)
                                 }
                             }
                             .padding()
@@ -146,11 +202,33 @@ struct JournalView: View {
             }
         }
     }
-    var filteredActivities: [Activity] {
+    
+    var weekRange: String {
+        let startDate = weekDates.first?.date ?? Date()
+        let endDate = weekDates.last?.date ?? Date()
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d"
+        
+        let yearFormatter = DateFormatter()
+        yearFormatter.dateFormat = "yyyy"
+        
+        return "\(dateFormatter.string(from: startDate))-\(dateFormatter.string(from: endDate)), \(yearFormatter.string(from: startDate))"
+    }
+    
+    var filteredActivitiesByDate: [ActivityLog] {
+        let selectedDay = weekDates[selectedDate].date
+        
+        return activitiesLog.filter { activity in
+            Calendar.current.isDate(activity.dateCompleted, inSameDayAs: selectedDay)
+        }
+    }
+    
+    var filteredActivities: [ActivityLog] {
         if selectedCategory == 0 {
-            return activities
+            return filteredActivitiesByDate
         } else {
-            return activities.filter { $0.category == selectedCategory }
+            return filteredActivitiesByDate.filter { $0.category == selectedCategory }
         }
     }
 }
@@ -176,6 +254,19 @@ struct DateButton: View {
         .frame(width: 60, height: 80)
         .background(isSelected ? Color(#colorLiteral(red: 0.7, green: 0.9, blue: 0.7, alpha: 1)) : Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5)))
         .cornerRadius(15)
+    }
+}
+
+extension Date {
+    func startOfWeek() -> Date {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2 // start week display from Monday
+        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
+        return calendar.date(from: components)!
+    }
+    
+    func isCurrentWeek() -> Bool {
+        return self.startOfWeek() == Date().startOfWeek()
     }
 }
 
