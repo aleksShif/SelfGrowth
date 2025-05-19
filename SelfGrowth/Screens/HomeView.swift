@@ -5,10 +5,17 @@
 //  Created by Sasha Shifrina on 4/2/25.
 //
 import SwiftUI
+import SwiftData
 
 struct HomeView: View {
     @State private var selectedTab = 0
     let username = "User" // This would come from your user data
+    
+    @Query private var activitiesLog: [ActivityLog]
+    
+    private var totalActivitiesLogged: Int {
+        return activitiesLog.count
+    }
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -48,15 +55,11 @@ struct HomeView: View {
                         // Plant and pot
                         VStack(spacing: 0) {
                             // Plant
-                            PlantView()
-                                .frame(width: 120, height: 200)
-                            
-                            // Pot
-                            PotView()
-                                .frame(width: 100, height: 80)
+                            PlantGrowthView(activityCount: totalActivitiesLogged)
+                                .frame(width: 300, height: 400) // 120, 200
                         }
                     }
-                    .padding(.bottom, 75)
+                    .padding(.bottom, 70)
                 }
                 
                 CustomTabBarView(selectedTab: $selectedTab)
