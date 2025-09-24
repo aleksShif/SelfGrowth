@@ -18,7 +18,7 @@ struct PlantGrowthView: UIViewControllerRepresentable {
         let controller = PlantViewController()
         
         // Set the completion handler
-//        controller.activityCount = activityCount
+        controller.activityCount = activityCount
         
         // For Demo, 2nd stage
         // controller.activityCount = 6
@@ -27,14 +27,14 @@ struct PlantGrowthView: UIViewControllerRepresentable {
         // controller.activityCount = 16
         
         // For Demo, 4th stage
-         controller.activityCount = 20
+//         controller.activityCount = 20
         
         return controller
     }
     
     // Function to update the UIViewController
     func updateUIViewController(_ uiViewController: PlantViewController, context: Context) {
-//        uiViewController.activityCount = activityCount
+        uiViewController.activityCount = activityCount
         
         // For Demo, 2nd stage
         // uiViewController.activityCount = 6
@@ -43,7 +43,7 @@ struct PlantGrowthView: UIViewControllerRepresentable {
         // uiViewController.activityCount = 16
         
         // For Demo, 4th stage
-         uiViewController.activityCount = 20
+//         uiViewController.activityCount = 20
     }
     
     // Coordinator for handling callbacks and user interaction
