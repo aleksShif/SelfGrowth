@@ -43,7 +43,6 @@ struct SelfGrowthApp: App {
     
     private func addDefaultActivitiesIfNeeded() async {
         print("addDefaultActivities called")
-        // Get the main context from the container
         let context = sharedModelContainer.mainContext
         
         // Create a fetch descriptor to count existing activities
@@ -54,7 +53,8 @@ struct SelfGrowthApp: App {
             let existingCount = try context.fetchCount(descriptor)
             
             if existingCount == 0 {
-                // Add default activities
+                // Add default activities if none exist
+                // this is to give users a few activities to choose from at the start
                 let defaultActivities = [
                     Activity(name: "Study Session", duration: 45, icon: "book", color: Color(#colorLiteral(red: 0.9686274529, green: 0.78039217, blue: 0.3450980484, alpha: 1)), category: 1),
                     Activity(name: "Workout", duration: 45, icon: "dumbbell", color: Color(#colorLiteral(red: 0.4666666687, green: 0.7647058964, blue: 0.7647058964, alpha: 1)), category: 2),
@@ -73,16 +73,22 @@ struct SelfGrowthApp: App {
             print("Error setting up default activities: \(error)")
         }
     }
+    
+    // for the purposes of testing my plant's growth and other things, i have a way to manually clear some activitylogs
+    
 //    private func clearSpecificItems() {
 //        let context = sharedModelContainer.mainContext
 //        do {
-//            let predicate = #Predicate<ActivityLog> { item in
-//                // Your condition here, e.g.:
-//                item.name == "Test3"
-//            }
+//            let descriptor = FetchDescriptor<ActivityLog>(
+//                sortBy: [SortDescriptor(\.dateCompleted, order: .forward)]
+//            )
 //            
-//            let descriptor = FetchDescriptor<ActivityLog>(predicate: predicate)
-//            try context.delete(model: ActivityLog.self, where: descriptor.predicate)
+//            var logs = try context.fetch(descriptor)
+//            let lastTen = logs.suffix(10)
+//            
+//            for item in lastTen {
+//                context.delete(item)
+//            }
 //            
 //            try context.save()
 //        } catch {
@@ -91,22 +97,23 @@ struct SelfGrowthApp: App {
 //    }
 }
 
+// main navigation is happening here. also used @AppStorage to remember which tab the user last clicked
 struct MainTabView: View {
-    @State private var selectedTab = 0
+    @AppStorage("selectedTab") private var selectedTab = 0
     
     var body: some View {
         ZStack(alignment: .bottom) {
             ZStack {
                 if selectedTab == 0 {
-                    HomeView()
+                    HomeView(selectedTab: $selectedTab)
                         .transition(.opacity)
                 }
                 else if selectedTab == 1 {
-                    TrackView()
+                    TrackView(selectedTab: $selectedTab)
                         .transition(.opacity)
                 }
                 else {
-                    JournalView()
+                    JournalView(selectedTab: $selectedTab)
                         .transition(.opacity)
                 }
             }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Structure for journal view categories that includes task count
+// Same as CategoryData but with num of tasks - convenience for JournalView
 struct JournalCategory {
     let category: Category
     let tasks: Int

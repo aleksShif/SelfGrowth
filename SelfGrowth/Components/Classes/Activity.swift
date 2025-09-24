@@ -26,9 +26,9 @@ enum ActivityColorOption: Int, CaseIterable {
         }
     }
     
-    // Helper to find the closest color option
+    // Helper to find fitting color option
     static func fromColor(_ color: Color) -> ActivityColorOption {
-        // Since we can't reliably compare colors, we'll just return a default
+        // Since we can't reliably compare colors, i'll return a default
         return .yellow
     }
 }
@@ -41,6 +41,7 @@ class Activity {
     var icon: String
     var colorIndex: Int
     var category: Int
+    var activityDescription: String = ""
     
     var colorOption: ActivityColorOption {
         return ActivityColorOption(rawValue: colorIndex) ?? .yellow
@@ -50,13 +51,14 @@ class Activity {
         return colorOption.color
     }
     
-    init(id: UUID = UUID(), name: String, duration: Int, icon: String, colorOption: ActivityColorOption, category: Int) {
+    init(id: UUID = UUID(), name: String, duration: Int, icon: String, colorOption: ActivityColorOption, category: Int, activityDescription: String = "") {
         self.id = id
         self.name = name
         self.duration = duration
         self.icon = icon
         self.colorIndex = colorOption.rawValue
         self.category = category
+        self.activityDescription = activityDescription
         print(self.colorIndex)
     }
     

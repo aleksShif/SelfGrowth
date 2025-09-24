@@ -25,13 +25,10 @@ struct LoggedActivityCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Activity card with icon
             ZStack {
-                // Background with clouds
                 RoundedRectangle(cornerRadius: 20)
                     .fill(Color(#colorLiteral(red: 0.4816817045, green: 0.5471228361, blue: 0.8951389194, alpha: 1)))
                 
-                // Center oval with icon
                 ZStack {
                     Ellipse()
                         .fill(activity.colorOption.color)
@@ -58,11 +55,7 @@ struct LoggedActivityCardView: View {
                                 y: CGFloat.random(in: 20...130)
                         )
                     }
-//                    BranchShape()
-//                        .fill(Color.purple.opacity(0.8))
-//                        .frame(width: 330, height: 30)
-//                        .padding(.horizontal, -20)
-//                        .offset(x: 20, y: 45)
+
                 }
                 
                 // Small clouds
@@ -92,7 +85,6 @@ struct LoggedActivityCardView: View {
             }
             .frame(height: 150)
             
-            // Activity name and duration
             HStack {
                 Text(activity.name)
                     .font(.title2)
@@ -108,7 +100,7 @@ struct LoggedActivityCardView: View {
                     .foregroundColor(isArrowPressed ? Color(#colorLiteral(red: 0.5081194639, green: 0.4898516536, blue: 0.7515105605, alpha: 1)) : .gray)
                     .scaleEffect(isArrowPressed ? 0.8 : 1.0)
                     .animation(.spring(response: 0.2, dampingFraction: 0.5), value: isArrowPressed)
-                    .padding(10) // Add padding to make tap target larger
+                    .padding(10)
                     .background(
                         Circle()
                             .fill(Color.gray.opacity(isArrowPressed ? 0.2 : 0.0))
@@ -117,15 +109,13 @@ struct LoggedActivityCardView: View {
                     .gesture(
                         TapGesture()
                             .onEnded { _ in
-                                // Start the press animation
                                 isArrowPressed = true
                                 
-                                // Toggle dropdown after a short delay
                                 withAnimation {
                                     showingDropdown.toggle()
                                 }
                                 
-                                // Reset the press animation after a short delay
+                                // delay before animation ends
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                     isArrowPressed = false
                                 }
@@ -139,7 +129,6 @@ struct LoggedActivityCardView: View {
                         .background(Color.gray.opacity(0.5))
                         .padding(.vertical, 5)
                     
-                    // Date picker
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Date Logged")
                             .font(.headline)
@@ -151,7 +140,6 @@ struct LoggedActivityCardView: View {
                             .cornerRadius(8)
                     }
                     
-                    // Duration stepper
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Duration")
                             .font(.headline)
@@ -163,7 +151,6 @@ struct LoggedActivityCardView: View {
                             .cornerRadius(8)
                     }
                     
-                    // Description
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Notes")
                             .font(.headline)
@@ -180,10 +167,7 @@ struct LoggedActivityCardView: View {
                 .animation(.spring(), value: showingDropdown)
             }
         }
-        .padding()
-        .background(Color(#colorLiteral(red: 0.5906556249, green: 0.8661773801, blue: 0.599182725, alpha: 1)))
-        .cornerRadius(20)
-        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .cardStyle()
     }
    
 }

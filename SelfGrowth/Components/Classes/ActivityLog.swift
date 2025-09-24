@@ -29,12 +29,12 @@ class ActivityLog {
         return colorOption.color
     }
     
-    init(activityId: UUID, name: String, duration: Int, description: String, category: Int, icon: String, colorOption: ActivityColorOption) {
+    init(activityId: UUID, name: String, duration: Int, activityDescription: String, category: Int, icon: String, colorOption: ActivityColorOption) {
         self.id = UUID()
         self.activityId = activityId
         self.name = name
         self.duration = duration
-        self.activityDescription = description
+        self.activityDescription = activityDescription
         self.category = category
         self.dateCompleted = Date()
         self.icon = icon
@@ -43,7 +43,7 @@ class ActivityLog {
     
     convenience init(activityId: UUID, name: String, duration: Int, description: String, category: Int, icon: String, color: Color) {
            let colorOption = ActivityColorOption.fromColor(color)
-           self.init(activityId: activityId, name: name, duration: duration, description: description, category: category, icon: icon, colorOption: colorOption)
+           self.init(activityId: activityId, name: name, duration: duration, activityDescription: description, category: category, icon: icon, colorOption: colorOption)
     }
        
     // Convenience initializer to create from an Activity
@@ -52,7 +52,7 @@ class ActivityLog {
            activityId: activity.id,
            name: activity.name,
            duration: duration > 0 ? duration : activity.duration,
-           description: description,
+           activityDescription: description,
            category: activity.category,
            icon: activity.icon,
            colorOption: activity.colorOption

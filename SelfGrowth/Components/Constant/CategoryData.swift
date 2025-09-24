@@ -15,7 +15,7 @@ struct Category {
 }
 
 struct CategoryData {
-    // Immutable list of categories
+    // IMMUTABLE list of categories
     static let categories = [
         Category(name: "All", icon: "plus", color: Color(#colorLiteral(red: 0.3820864856, green: 0.6893107295, blue: 0.9856509566, alpha: 1))),
         Category(name: "School", icon: "heart", color: Color(#colorLiteral(red: 0.3820864856, green: 0.6893107295, blue: 0.9856509566, alpha: 1))),

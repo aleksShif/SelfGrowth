@@ -12,7 +12,6 @@ import SwiftData
 struct AddActivityView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-//    @Binding var activities: [Activity]
     let categories: [Category]
     
     @State private var name = ""
@@ -45,8 +44,6 @@ struct AddActivityView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient
-            
             NavigationStack {
                 Form {
                     Section(header: Text("Activity Details")
@@ -181,14 +178,15 @@ struct AddActivityView: View {
         !name.isEmpty && duration >= 5
     }
     
-    // Add the activity to the list
+    // Create the activity and attempt to add to the list
     func addActivity() {
         let newActivity = Activity(
             name: name,
             duration: duration,
             icon: selectedIcon,
             colorOption: colorsEnum[selectedColorIndex],
-            category: selectedCategory
+            category: selectedCategory,
+            activityDescription: description
         )
         
         modelContext.insert(newActivity)
