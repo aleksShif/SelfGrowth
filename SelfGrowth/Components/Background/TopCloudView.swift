@@ -7,55 +7,71 @@
 
 import SwiftUI
 
-// Custom view for the top cloud background
 struct TopCloudView: View {
     var color: Color
+    
     var body: some View {
-        ZStack(alignment: .top) {
-            // Main cloud background
-            Rectangle()
-                .fill(color)
-                .frame(height: 200)
-                .edgesIgnoringSafeArea(.top)
-            
-            GeometryReader { geometry in
-                HStack(spacing: -20) {
-                    ForEach(0..<3) { i in
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                Rectangle()
+                    .fill(color)
+                    .frame(height: min(200, geometry.size.height * 0.3))
+                    .edgesIgnoringSafeArea(.top)
+                
+                // Relative circle sizes based on screen's width and height
+                let circleSize = min(60, geometry.size.width * 0.15)
+                let cloudBottomPosition = min(200, geometry.size.height * 0.18)
+                
+                // First row of circles
+                HStack(spacing: -circleSize * 0.3) {
+                    ForEach(0..<Int(ceil(geometry.size.width / (circleSize * 0.7)))) { i in
                         Circle()
                             .fill(color)
-                            .frame(width: 60, height: 60)
-                            .offset(y: 165 - CGFloat(i))
+                            .frame(width: circleSize, height: circleSize)
+                            .offset(y: cloudBottomPosition - circleSize * 0.5 - CGFloat(i % 2) * 5)
                     }
                 }
-                .frame(width: geometry.size.width + 40)
-                .offset(x: -199) // Adjust to ensure it covers the full width
-            }
-            
-            GeometryReader { geometry in
-                HStack(spacing: -20) {
-                    ForEach(0..<4) { i in
+                .frame(width: geometry.size.width + circleSize)
+                .offset(x: -circleSize / 2)
+                
+                // NOTE: will implement this after finals because it's not looking good with different screen sizes right now
+                
+//                // extra row of circles on the left of screen
+//                HStack(spacing: -circleSize * 0.3) {
+//                    ForEach(0..<Int(ceil(geometry.size.width / (circleSize)))) { i in
+//                        Circle()
+//                            .fill(color)
+//                            .frame(width: circleSize, height: circleSize)
+//                            .offset(y: cloudBottomPosition - circleSize / 25 + circleSize * 0.30 - 8*CGFloat(i))
+//                    }
+//                }
+//                .frame(width: geometry.size.width + circleSize)
+//                .offset(x: -circleSize * 3, y: circleSize / 1.3)
+//                
+                
+                // Second row of circles
+                HStack(spacing: -circleSize * 0.3) {
+                    ForEach(0..<Int(ceil(geometry.size.width / (circleSize * 0.7)))) { i in
                         Circle()
                             .fill(color)
-                            .frame(width: 60, height: 60)
-                            .offset(y: 140 - CGFloat(i))
+                            .frame(width: circleSize, height: circleSize)
+                            .offset(y: cloudBottomPosition - circleSize * 0.8 - CGFloat(i % 3) * 7)
                     }
                 }
-                .frame(width: geometry.size.width + 40)
-                .offset(x: -130) // Adjust to ensure it covers the full width
-            }
-            
-            // Cloud bottom edge
-            GeometryReader { geometry in
-                HStack(spacing: -20) {
-                    ForEach(0..<10) { i in
+                .frame(width: geometry.size.width + circleSize)
+                .offset(x: -circleSize / 2)
+                
+                // Cloud bottom edge with alternating heights for natural look
+                HStack(spacing: -circleSize * 0.3) {
+                    ForEach(0..<Int(ceil(geometry.size.width / (circleSize * 0.7))) + 1) { i in
                         Circle()
                             .fill(color)
-                            .frame(width: 60, height: 60)
-                            .offset(y: i.isMultiple(of: 2) ? 120 : 110)
+                            .frame(width: circleSize, height: circleSize)
+                            .offset(y: cloudBottomPosition - (i.isMultiple(of: 2) ? 0 : circleSize * 0.15))
                     }
                 }
-                .frame(width: geometry.size.width + 40)
-                .offset(x: -20) // Adjust to ensure it covers the full width
+                .frame(width: geometry.size.width + circleSize)
+                .offset(x: -circleSize / 2)
             }
         }
     }

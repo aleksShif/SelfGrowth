@@ -12,7 +12,6 @@ import SwiftData
 struct AddActivityView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-//    @Binding var activities: [Activity]
     let categories: [Category]
     
     @State private var name = ""
@@ -20,6 +19,7 @@ struct AddActivityView: View {
     @State private var duration = 30
     @State private var selectedCategory = 1
     @State private var selectedColor = Color(#colorLiteral(red: 0.9686274529, green: 0.78039217, blue: 0.3450980484, alpha: 1))
+    @State private var selectedColorIndex = 0
     @State private var selectedIcon = "book"
     
     // Available icons to choose from
@@ -34,10 +34,16 @@ struct AddActivityView: View {
         Color(#colorLiteral(red: 0.4500938654, green: 0.8412100673, blue: 0.6149917841, alpha: 1))
     ]
     
+    let colorsEnum: [ActivityColorOption] = [
+        .yellow,
+        .teal,
+        .purple,
+        .pink,
+        .green
+    ]
+    
     var body: some View {
         ZStack {
-            // Background gradient
-            
             NavigationStack {
                 Form {
                     Section(header: Text("Activity Details")
@@ -126,6 +132,7 @@ struct AddActivityView: View {
                                         )
                                         .onTapGesture {
                                             selectedColor = colors[index]
+                                            selectedColorIndex = index
                                         }
                                 }
                             }
@@ -171,14 +178,15 @@ struct AddActivityView: View {
         !name.isEmpty && duration >= 5
     }
     
-    // Add the activity to the list
+    // Create the activity and attempt to add to the list
     func addActivity() {
         let newActivity = Activity(
             name: name,
             duration: duration,
             icon: selectedIcon,
-            color: selectedColor,
-            category: selectedCategory
+            colorOption: colorsEnum[selectedColorIndex],
+            category: selectedCategory,
+            activityDescription: description
         )
         
         modelContext.insert(newActivity)

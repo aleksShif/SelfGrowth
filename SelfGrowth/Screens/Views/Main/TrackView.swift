@@ -5,111 +5,136 @@
 //  Created by Sasha Shifrina on 4/10/25.
 //
 
-
 import SwiftUI
 import SwiftData
 
 struct TrackView: View {
-    @State private var selectedTab = 1 // Track tab selected
-    @State private var selectedCategory = 0 // "All" category selected by default
-    @State private var isAddingActivity = false
+    @Binding var selectedTab: Int
     
-    @Query private var activities: [Activity]
+    @StateObject private var trackViewModel = TrackViewModel()
     
-    @Environment(\.modelContext) private var modelContext
-
-    // Category data
-    let categories = CategoryData.categories
+    @Environment(\.modelContext) private var context
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Background gradient
-            LinearGradient(
-                gradient: Gradient(colors: [Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 1)), Color(#colorLiteral(red: 0.2588235438, green: 0.7568627596, blue: 0.9686274529, alpha: 1))]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .edgesIgnoringSafeArea(.all)
+        GeometryReader { geometry in
+            let screenWidth = geometry.size.width
+            let screenHeight = geometry.size.height
+            let isSmallDevice = screenHeight < 700
             
-            // Main content
-            ZStack(alignment: .bottom) {
-                // Top section with clouds and title
-                SkyBackgroundView(topColor: Color(#colorLiteral(red: 0.4756627083, green: 0.5513323545, blue: 0.8908587098, alpha: 1)), cloudColor: Color(#colorLiteral(red: 0.5906556249, green: 0.8661773801, blue: 0.599182725, alpha: 1)))
+            ZStack() {
+                // Background gradient
+                LinearGradient(
+                    gradient: Gradient(colors: [Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 1)), Color(#colorLiteral(red: 0.2588235438, green: 0.7568627596, blue: 0.9686274529, alpha: 1))]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .edgesIgnoringSafeArea(.all)
                 
-                VStack(spacing: 30) {
-                    ZStack(alignment: .top) {
-                        // Header
-                        VStack(alignment: .center, spacing: 4) {
-                            Text("Your Activity")
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                            
-                            Text("What are you doing today?")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.9))
-                        }
-                        .padding(.top, 40)
-                    }
-                    // Category filter
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 15) {
-                            ForEach(0..<categories.count, id: \.self) { index in
-                                CategoryButtonView(
-                                    category: categories[index],
-                                    isSelected: selectedCategory == index
-                                )
-                                .onTapGesture {
-                                    selectedCategory = index
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.vertical, 10)
-                    }
-                    .background(Color(#colorLiteral(red: 0.4720982313, green: 0.8328886628, blue: 0.9776143432, alpha: 0)))
+                // Main content
+                ZStack(alignment: .bottom) {
+                    // Top section with clouds and title
+                    SkyBackgroundView(topColor: Color(#colorLiteral(red: 0.4756627083, green: 0.5513323545, blue: 0.8908587098, alpha: 1)), cloudColor: Color(#colorLiteral(red: 0.5906556249, green: 0.8661773801, blue: 0.599182725, alpha: 1)))
                     
-                    // Activity list
-                    ScrollView {
-                        VStack(spacing: 20) {
-                            ForEach(filteredActivities) { activity in
-                                ActivityCardView(activity: activity)
-                            }
-                            
-                            Button(action: {isAddingActivity=true})
-                            {
-                                HStack{
-                                    Image(systemName: "plus.circle.fill")
-                                        .font(.system(size: 20))
-                                    Text("Add New Activity")
-                                        .fontWeight(.semibold)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color(#colorLiteral(red: 0.5081194639, green: 0.4898516536, blue: 0.7515105605, alpha: 1)))
-                                .cornerRadius(15)
-                            }
-                            .padding(.bottom, 80)
-                        }
-                        .padding()
+                    VStack(spacing: isSmallDevice ? 15 : 30) {
+                        // Header Section
+                        headerSection(screenWidth: screenWidth, isSmallDevice: isSmallDevice)
+                        
+                        // Category filter
+                        categorySection(screenWidth: screenWidth, isSmallDevice: isSmallDevice)
+                        
+                        // Activity list
+                        activitySection(screenWidth: screenWidth, screenHeight: screenHeight, isSmallDevice: isSmallDevice)
                     }
+                    
+                    // Custom tab bar
+                    CustomTabBarView(selectedTab: $selectedTab)
+                    
                 }
-                // Custom tab bar
-                CustomTabBarView(selectedTab: $selectedTab)
+                if trackViewModel.overlayState.showOverlay {
+                    GrowthMilestoneCelebrationView(total: trackViewModel.activitiesLog.count)
+                    .zIndex(10)
+                    .onAppear{ print("growthmilestone shown!")}
+                }
             }
-        }
-        .sheet(isPresented: $isAddingActivity) {
-            AddActivityView(categories: categories)
+            .sheet(isPresented: $trackViewModel.isAddingActivity, onDismiss: {
+                trackViewModel.fetchData()
+            }) {
+                AddActivityView(categories: trackViewModel.categories)
+            }
+            .onAppear{
+                trackViewModel.setContextIfNeeded(context)
+            }
         }
     }
     
-    // Filter activities based on selected category
-    var filteredActivities: [Activity] {
-        if selectedCategory == 0 {
-            return activities
-        } else {
-            return activities.filter { $0.category == selectedCategory }
+    // View Components
+    
+    private func headerSection(screenWidth: CGFloat, isSmallDevice: Bool) -> some View {
+        ZStack(alignment: .top) {
+            // Header
+            VStack(alignment: .center, spacing: isSmallDevice ? 2 : 4) {
+                Text("Your Activity")
+                    .font(isSmallDevice ? .title2 : .title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                
+                Text("What are you doing today?")
+                    .font(isSmallDevice ? .caption : .subheadline)
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            .padding(.top, isSmallDevice ? 20 : 40)
+            .frame(width: screenWidth)
+        }
+    }
+    
+    private func categorySection(screenWidth: CGFloat, isSmallDevice: Bool) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: isSmallDevice ? 10 : 15) {
+                ForEach(0..<trackViewModel.categories.count, id: \.self) { index in
+                    CategoryButtonView(
+                        category: trackViewModel.categories[index],
+                        isSelected: trackViewModel.selectedCategory == index,
+                        isSmallDevice: isSmallDevice
+                    )
+                    .onTapGesture {
+                        trackViewModel.selectedCategory = index
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, isSmallDevice ? 5 : 10)
+        }
+        .background(Color(#colorLiteral(red: 0.4720982313, green: 0.8328886628, blue: 0.9776143432, alpha: 0)))
+        .frame(width: screenWidth)
+    }
+    
+    private func activitySection(screenWidth: CGFloat, screenHeight: CGFloat, isSmallDevice: Bool) -> some View {
+        ScrollView {
+            LazyVStack(spacing: isSmallDevice ? 15 : 20) {
+                ForEach(trackViewModel.filteredActivities) { activity in
+                    ActivityCardView(activity: activity, overlayState: trackViewModel.overlayState, viewModel: trackViewModel)
+                        .frame(width: screenWidth * 0.9) // Make cards consistently sized
+                }
+                
+                Button(action: {trackViewModel.isAddingActivity=true})
+                {
+                    HStack{
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: isSmallDevice ? 16 : 20))
+                        Text("Add New Activity")
+                            .fontWeight(.semibold)
+                            .font(isSmallDevice ? .callout : .body)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(isSmallDevice ? 10 : 16)
+                    .background(Color(#colorLiteral(red: 0.5081194639, green: 0.4898516536, blue: 0.7515105605, alpha: 1)))
+                    .cornerRadius(15)
+                }
+                .padding(.bottom, screenHeight * 0.1)
+                .frame(width: screenWidth * 0.9) // Make button consistently sized
+            }
+            .padding()
         }
     }
 }
@@ -117,107 +142,23 @@ struct TrackView: View {
 struct CategoryButtonView: View {
     let category: Category
     let isSelected: Bool
+    let isSmallDevice: Bool
     
     var body: some View {
         VStack {
             ZStack {
                 Circle()
                     .fill(isSelected ? category.color : Color(#colorLiteral(red: 0.5081194639, green: 0.4898516536, blue: 0.7515105605, alpha: 1)))
-                    .frame(width: 60, height: 60)
+                    .frame(width: isSmallDevice ? 50 : 60, height: isSmallDevice ? 50 : 60)
                 
                 Image(systemName: category.icon)
-                    .font(.system(size: 24))
+                    .font(.system(size: isSmallDevice ? 20 : 24))
                     .foregroundColor(.white)
             }
             
             Text(category.name)
-                .font(.caption)
+                .font(isSmallDevice ? .caption2 : .caption)
                 .foregroundColor(isSelected ? Color(#colorLiteral(red: 0.1921568662, green: 0.007843137719, blue: 0.09019608051, alpha: 1)) : .gray)
-        }
-    }
-}
-
-struct ActivityCardView: View {
-    let activity: Activity
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Activity card with icon
-            ZStack {
-                // Background with clouds
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(#colorLiteral(red: 0.2997636199, green: 0.6950053573, blue: 0.7074371576, alpha: 1)))
-                
-                // Center oval with icon
-                ZStack {
-                    Ellipse()
-                        .fill(activity.color)
-                        .frame(width: 250, height: 120)
-                        .rotationEffect(.degrees(10))
-                    
-                    Image(systemName: activity.icon)
-                        .font(.system(size: 40))
-                        .foregroundColor(.white)
-                }
-                
-                if activity.name == "Workout" {
-                    Circle()
-                        .fill(Color.orange)
-                        .frame(width: 40, height: 40)
-                        .position(x: 50, y: 40)
-                    // Stars/sparkles
-//                    ForEach(0..<10) { i in
-//                        Image(systemName: "sparkle")
-//                            .font(.system(size: 10))
-//                            .foregroundColor(Color.purple.opacity(0.5))
-//                            .position(
-//                                x: CGFloat.random(in: 20...330),
-//                                y: CGFloat.random(in: 20...130)
-//                        )
-//                    }
-                    BranchShape()
-                        .fill(Color.purple.opacity(0.8))
-                        .frame(width: 330, height: 30)
-                        .padding(.horizontal, -20)
-                        .offset(x: 20, y: 45)
-                }
-                
-                // Small clouds
-                HStack {
-                    CloudView(width: 60, height: 30, color: Color(#colorLiteral(red: 0.5906556249, green: 0.8661773801, blue: 0.599182725, alpha: 1)))
-                        .offset(x: 10, y: -20)
-                    
-                    Spacer()
-                    
-                    CloudView(width: 50, height: 25, color: Color(#colorLiteral(red: 0.5906556249, green: 0.8661773801, blue: 0.599182725, alpha: 1)))
-                        .offset(x: 120, y: -30)
-                    
-                    Spacer()
-                    CloudView(width:40, height: 20, color: Color(#colorLiteral(red: 0.5906556249, green: 0.8661773801, blue: 0.599182725, alpha: 1)))
-                        .offset(x: -10)
-                }
-            }
-            .frame(height: 150)
-            
-            // Activity name and duration
-            HStack {
-                Text(activity.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                Spacer()
-            }
-            
-            HStack {
-                Text("\(activity.duration) MIN")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.gray)
-            }
         }
     }
 }
@@ -382,7 +323,9 @@ struct BranchShape: Shape {
 }
 
 struct TrackView_Previews: PreviewProvider {
+    @State static var selectedTab = 1
+    
     static var previews: some View {
-        TrackView()
+        TrackView(selectedTab: $selectedTab)
     }
 }

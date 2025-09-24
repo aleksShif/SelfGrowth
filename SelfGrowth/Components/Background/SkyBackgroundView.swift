@@ -5,46 +5,92 @@
 //  Created by Sasha Shifrina on 4/9/25.
 //
 
+
 import SwiftUI
 
 struct SkyBackgroundView: View {
     var topColor: Color
     var cloudColor: Color
+    
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Main content
-            VStack(spacing: 65) {
+        GeometryReader { geometry in
+            ZStack {
                 ZStack(alignment: .top) {
-                    TopCloudView(color:topColor)
+                    TopCloudView(color: topColor)
                     
-                    SunView()
-                        .offset(x: -130, y: -20)
-                    
-                    CloudView(width: 120, height: 60, color: cloudColor)
-                        .offset(x: 120, y: -20)
-                    
-                    CloudView(width: 90, height: 45, color: cloudColor)
-                        .offset(x: -120, y: 70)
-                    
-                    CloudView(width: 70, height: 35, color: cloudColor)
-                        .offset(x: 70, y: 100)
-                    
-                    StarView(size: 10)
-                        .offset(x: -170, y: 40)
-                    
-                    StarView(size: 8)
-                        .offset(x: 160, y: 90)
-                    
-                    TwinklingStarView(size: 6, color: cloudColor)
-                        .offset(x: -180, y: 90)
-                    
-                    StarView(size: 7)
-                        .offset(x: 130, y: 70)
-                    
-                    TwinklingStarView(size: 5, color: cloudColor)
-                        .offset(x: -160, y: 70)
-                    
+                    ZStack(alignment: .top){
+                        SunView()
+                            .frame(width: min(100, geometry.size.width * 0.17), height:  min(100, geometry.size.width * 0.17))
+                            .offset(x: -geometry.size.width * 0.3, y: geometry.size.height * 0.06)
+                            .padding(.top)
+                        // Cloud positioning - using relative positions based on screen dimensions
+                        CloudView(
+                            width: geometry.size.width * 0.2,
+                            height: geometry.size.width * 0.15,
+                            color: cloudColor
+                        )
+                        .position(
+                            x: geometry.size.width * 0.8,
+                            y: geometry.size.height * 0.15
+                        )
+                        
+                        CloudView(
+                            width: geometry.size.width * 0.2,
+                            height: geometry.size.width * 0.12,
+                            color: cloudColor
+                        )
+                        .position(
+                            x: geometry.size.width * 0.2,
+                            y: geometry.size.height * 0.25
+                        )
+                        
+                        CloudView(
+                            width: geometry.size.width * 0.18,
+                            height: geometry.size.width * 0.1,
+                            color: cloudColor
+                        )
+                        .position(
+                            x: geometry.size.width * 0.7,
+                            y: geometry.size.height * 0.28
+                        )
+                        
+                        // Stars positioning - using relative positions
+                        StarView(size: geometry.size.width * 0.025)
+                            .position(
+                                x: geometry.size.width * 0.15,
+                                y: geometry.size.height * 0.2
+                            )
+                        
+                        StarView(size: geometry.size.width * 0.02)
+                            .position(
+                                x: geometry.size.width * 0.85,
+                                y: geometry.size.height * 0.28
+                            )
+                        
+                        TwinklingStarView(size: geometry.size.width * 0.015, color: cloudColor)
+                            .position(
+                                x: geometry.size.width * 0.12,
+                                y: geometry.size.height * 0.28
+                            )
+                        
+                        StarView(size: geometry.size.width * 0.018)
+                            .position(
+                                x: geometry.size.width * 0.78,
+                                y: geometry.size.height * 0.25
+                            )
+                        
+                        TwinklingStarView(size: geometry.size.width * 0.012, color: cloudColor)
+                            .position(
+                                x: geometry.size.width * 0.16,
+                                y: geometry.size.height * 0.25
+                            )
+                    }
+                    .padding(.top)
+                    .offset(y: -geometry.size.height * 0.10)
                 }
+                Spacer()
+                
+                .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
     }

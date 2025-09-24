@@ -10,41 +10,12 @@ import SwiftUI
 import SwiftData
 
 struct JournalView: View {
-    @State private var selectedTab = 2 // Journal tab selected
-    @State private var selectedDate = 0 // First date selected
-    @State private var selectedCategory = 0
+    @Binding var selectedTab: Int
     
-    @Query private var activities: [Activity]
+    @StateObject private var journalViewModel = JournalViewModel()
     
-    @Environment(\.modelContext) private var modelContext
-    
-    // Sample dates
-    let dates = [
-        (day: "MON", number: "10"),
-        (day: "TUE", number: "11"),
-        (day: "WED", number: "12"),
-        (day: "THU", number: "13"),
-        (day: "FRI", number: "14")
-    ]
-    
-    var journalCategories: [JournalCategory] {
-        return CategoryData.categories.enumerated()
-            .map { (index, category) in
-                var taskCount = 0
-                if index == 0 {
-                    taskCount = activities.count
-                } else {
-                    taskCount = activities.filter {$0.category == index}.count
-                }
-                return JournalCategory(category: category, tasks: taskCount)
-            }
-    }
-////
-//    let categories = [
-//           (category: Category(name: "School", icon: "book", color: Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5))), tasks: 4),
-//           (category: Category(name: "Mindfulness", icon: "moon.zzz", color: Color(#colorLiteral(red: 0.4745098054, green: 0.8392156959, blue: 0.9764705896, alpha: 0.5))), tasks: 3)
-//       ]
-    
+    @Environment(\.modelContext) private var context
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // Background gradient
@@ -76,24 +47,63 @@ struct JournalView: View {
                         .padding(.top, 40)
                     }
                     
-                    Spacer()
+//                    Spacer()
+                    
+                    // Week Selector
+                    HStack {
+                        Button(action: {
+                            journalViewModel.currentWeekStartDate = Calendar.current.date(byAdding: .day, value: -7, to: journalViewModel.currentWeekStartDate)!
+                            journalViewModel.selectedDate = 0
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(width: 40, height: 40)
+                                .background(Color(#colorLiteral(red: 0.7, green: 0.9, blue: 0.7, alpha: 1)))
+                                .cornerRadius(12)
+                        }
+                        
+                        Spacer()
+                        
+                        Text(journalViewModel.weekRange)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            journalViewModel.currentWeekStartDate = Calendar.current.date(byAdding: .day, value: 7, to: journalViewModel.currentWeekStartDate)!
+                            journalViewModel.selectedDate = 0
+                        }) {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(journalViewModel.currentWeekStartDate.isCurrentWeek() ? .gray : .white)
+                                .frame(width: 40, height: 40)
+                                .background(journalViewModel.currentWeekStartDate.isCurrentWeek() ? Color(#colorLiteral(red: 0.7, green: 0.9, blue: 0.7, alpha: 0.5)) :
+                                                Color(#colorLiteral(red: 0.7, green: 0.9, blue: 0.7, alpha: 1)))
+                                .cornerRadius(12)
+                        }
+                        .disabled(journalViewModel.currentWeekStartDate.isCurrentWeek())
+                    }
+                    .padding(.top, 10)
+                    .padding(.horizontal, 30)
                     
                     // Date selector
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 15) {
-                            ForEach(0..<dates.count, id: \.self) { index in
+                            ForEach(0..<journalViewModel.weekDates.count, id: \.self) { index in
+                                let item = journalViewModel.weekDates[index]
                                 DateButton(
-                                    day: dates[index].day,
-                                    number: dates[index].number,
-                                    isSelected: selectedDate == index
+                                    day: item.day,
+                                    number: item.number,
+                                    isSelected: journalViewModel.selectedDate == index
                                 )
                                 .onTapGesture {
-                                    selectedDate = index
+                                    journalViewModel.selectedDate = index
                                 }
                             }
                         }
                         .padding(.horizontal, 30)
-                        .padding(.vertical, 10)
                     }
                     
                     // Categories section
@@ -113,14 +123,15 @@ struct JournalView: View {
                             // Category cards
                             ScrollView(.horizontal, showsIndicators: false){
                                 HStack(spacing: 15) {
-                                    ForEach(0..<journalCategories.count, id: \.self) { index in
+                                    ForEach(0..<journalViewModel.journalCategories.count, id: \.self) { index in
+                                        let item = journalViewModel.journalCategories[index]
                                         CategoryCard(
-                                            category: journalCategories[index].category,
-                                            tasks: journalCategories[index].tasks,
-                                            isSelected: selectedCategory == index
+                                            category: item.category,
+                                            tasks: item.tasks,
+                                            isSelected: journalViewModel.selectedCategory == index
                                         )
                                         .onTapGesture {
-                                            selectedCategory = index
+                                            journalViewModel.selectedCategory = index
                                         }
                                     }
                                 }
@@ -130,8 +141,8 @@ struct JournalView: View {
                             // Task card
                            
                             VStack(spacing: 20) {
-                                ForEach(filteredActivities) { activity in
-                                    ActivityCardView(activity: activity)
+                                ForEach(journalViewModel.filteredActivities) { activity in
+                                    LoggedActivityCardView(activity: activity)
                                 }
                             }
                             .padding()
@@ -145,12 +156,8 @@ struct JournalView: View {
                 }
             }
         }
-    }
-    var filteredActivities: [Activity] {
-        if selectedCategory == 0 {
-            return activities
-        } else {
-            return activities.filter { $0.category == selectedCategory }
+        .onAppear {
+            journalViewModel.setContextIfNeeded(context)
         }
     }
 }
@@ -225,10 +232,23 @@ struct CategoryCard: View {
     }
 }
 
-// Extension to apply rounded corners to specific corners
+// Apply rounded modifier to specific corners
 extension View {
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
         clipShape(RoundedCorner(radius: radius, corners: corners))
+    }
+}
+
+extension Date {
+    func startOfWeek() -> Date {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2 // start week display from Monday
+        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
+        return calendar.date(from: components)!
+    }
+    
+    func isCurrentWeek() -> Bool {
+        return self.startOfWeek() == Date().startOfWeek()
     }
 }
 
@@ -243,7 +263,9 @@ struct RoundedCorner: Shape {
 }
 
 struct JournalView_Previews: PreviewProvider {
+    @State static var selectedTab = 2
+    
     static var previews: some View {
-        JournalView()
+        JournalView(selectedTab: $selectedTab)
     }
 }
